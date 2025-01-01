@@ -6,7 +6,7 @@ namespace Test
     public class AdoServiceTests
     {
         private AdoService _adoService;
-        private string _connectionString = "Server=localhost;Database=learn13;User Id=vova;Password=vova;TrustServerCertificate=True;";
+        private string _connectionString = "Server=localhost;Database=plsChange;User Id=plsChange;Password=plsChange;TrustServerCertificate=True;";
 
         [SetUp]
         public void Setup()
