@@ -32,7 +32,6 @@ namespace Task
             }
         }
 
-
         public void UpdateProduct(int id, string name, string description, decimal weight, decimal height, decimal width, decimal length)
         {
             using (SqlConnection conn = new SqlConnection(_connectionString))
@@ -135,7 +134,6 @@ namespace Task
             }
         }
 
-
         public void UpdateOrder(int id, string status, DateTime createdDate, DateTime updatedDate, int productId)
         {
             using (SqlConnection conn = new SqlConnection(_connectionString))
@@ -224,15 +222,28 @@ namespace Task
         {
             using (SqlConnection conn = new SqlConnection(_connectionString))
             {
-                string query = "DELETE FROM [Order] WHERE (@Month IS NULL OR MONTH(CreatedDate) = @Month) AND (@Year IS NULL OR YEAR(CreatedDate) = @Year) AND (@Status IS NULL OR Status = @Status) AND (@ProductId IS NULL OR ProductId = @ProductId)";
-                SqlCommand cmd = new SqlCommand(query, conn);
-                cmd.Parameters.AddWithValue("@Month", (object)month ?? DBNull.Value);
-                cmd.Parameters.AddWithValue("@Year", (object)year ?? DBNull.Value);
-                cmd.Parameters.AddWithValue("@Status", (object)status ?? DBNull.Value);
-                cmd.Parameters.AddWithValue("@ProductId", (object)productId ?? DBNull.Value);
                 conn.Open();
-                cmd.ExecuteNonQuery();
+                using (SqlTransaction transaction = conn.BeginTransaction())
+                {
+                    try
+                    {
+                        string query = "DELETE FROM [Order] WHERE (@Month IS NULL OR MONTH(CreatedDate) = @Month) AND (@Year IS NULL OR YEAR(CreatedDate) = @Year) AND (@Status IS NULL OR Status = @Status) AND (@ProductId IS NULL OR ProductId = @ProductId)";
+                        SqlCommand cmd = new SqlCommand(query, conn, transaction);
+                        cmd.Parameters.AddWithValue("@Month", (object)month ?? DBNull.Value);
+                        cmd.Parameters.AddWithValue("@Year", (object)year ?? DBNull.Value);
+                        cmd.Parameters.AddWithValue("@Status", (object)status ?? DBNull.Value);
+                        cmd.Parameters.AddWithValue("@ProductId", (object)productId ?? DBNull.Value);
+                        cmd.ExecuteNonQuery();
+                        transaction.Commit();
+                    }
+                    catch
+                    {
+                        transaction.Rollback();
+                        throw;
+                    }
+                }
             }
         }
     }
 }
+

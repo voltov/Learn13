@@ -1,4 +1,5 @@
 using Task;
+using System.Data;
 
 namespace Test
 {
@@ -6,12 +7,14 @@ namespace Test
     public class AdoServiceTests
     {
         private AdoService _adoService;
+        private AdoServiceDisconnected _adoServiceDisconnected;
         private string _connectionString = "Server=localhost;Database=plsChange;User Id=plsChange;Password=plsChange;TrustServerCertificate=True;";
 
         [SetUp]
         public void Setup()
         {
             _adoService = new AdoService(_connectionString);
+            _adoServiceDisconnected = new AdoServiceDisconnected(_connectionString);
         }
 
         [Test]
@@ -95,6 +98,36 @@ namespace Test
             _adoService.DeleteProduct(productId);
             var product = _adoService.GetProduct(productId);
             Assert.IsNull(product);
+        }
+
+        [Test]
+        public void DisconnectedModel_ShouldRetrieveAndUpdateProducts()
+        {
+            DataTable productsTable = _adoServiceDisconnected.GetProducts();
+            Assert.IsNotEmpty(productsTable.Rows);
+
+            // Modify a product
+            productsTable.Rows[0]["Name"] = "UpdatedProduct";
+            _adoServiceDisconnected.UpdateProducts(productsTable);
+
+            // Verify the update
+            DataTable updatedProductsTable = _adoServiceDisconnected.GetProducts();
+            Assert.That(updatedProductsTable.Rows[0]["Name"], Is.EqualTo("UpdatedProduct"));
+        }
+
+        [Test]
+        public void DisconnectedModel_ShouldRetrieveAndUpdateOrders()
+        {
+            DataTable ordersTable = _adoServiceDisconnected.GetOrders();
+            Assert.IsNotEmpty(ordersTable.Rows);
+
+            // Modify an order
+            ordersTable.Rows[0]["Status"] = "Completed";
+            _adoServiceDisconnected.UpdateOrders(ordersTable);
+
+            // Verify the update
+            DataTable updatedOrdersTable = _adoServiceDisconnected.GetOrders();
+            Assert.That(updatedOrdersTable.Rows[0]["Status"], Is.EqualTo("Completed"));
         }
     }
 }
